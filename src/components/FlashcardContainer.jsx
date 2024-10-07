@@ -61,6 +61,10 @@ const FlashcardContainer = () => {
   const [flashcards, setFlashcards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  const [userAnswer, setUserAnswer] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
 
   useEffect(() => {
     setFlashcards(shuffleArray(initialFlashcards));
@@ -74,12 +78,44 @@ const FlashcardContainer = () => {
     return array;
   };
 
+  const shuffleCards = () => {
+    setFlashcards(shuffleArray(initialFlashcards)); // Reshuffle flashcards
+    setCurrentIndex(0); // Reset to the first card
+    setFlipped(false); // Reset flipped state
+    setUserAnswer("");
+    setFeedback("");
+  };
+
+  const checkAnswer = () => {
+    const correctAnswer = flashcards[currentIndex].answer.toLowerCase();
+    if (userAnswer.toLowerCase() === correctAnswer) {
+      setFeedback("Correct!");
+      setCurrentStreak((prev) => prev + 1);
+      if (currentStreak + 1 > longestStreak) {
+        setLongestStreak(currentStreak + 1);
+      }
+    } else {
+      setFeedback("Incorrect. Try again!");
+      setCurrentStreak(0); // Reset streak if the answer is wrong
+    }
+    setUserAnswer(""); // Clear input after checking
+  };
+
+  const handlePreviousCard = () => {
+    setCurrentIndex(
+      (prevIndex) => (prevIndex - 1 + flashcards.length) % flashcards.length
+    );
+    setFlipped(false);
+  };
+
   const handleNextCard = () => {
     setCurrentIndex((prevIndex) => {
       const nextIndex = (prevIndex + 1) % flashcards.length;
       return nextIndex;
     });
     setFlipped(false);
+    setUserAnswer(""); // Clear the input on the next card
+    setFeedback(""); // Clear feedback
   };
 
   const handleFlip = () => {
@@ -97,6 +133,9 @@ const FlashcardContainer = () => {
         The quiz will help you learn about your rights from the Constitution.
       </h2>
       <h3>Total Cards: {flashcards.length}</h3>
+      <h4>
+        Current Streak: {currentStreak}, Longest Streak: {longestStreak}
+      </h4>{" "}
       <Flashcard
         question={flashcards[currentIndex].question}
         answer={flashcards[currentIndex].answer}
@@ -104,12 +143,22 @@ const FlashcardContainer = () => {
         flipped={flipped}
         onFlip={handleFlip}
       />
-      <button
-        onClick={handleNextCard}
-        style={{ marginTop: "20px", padding: "10px 20px", fontSize: "16px" }}
-      >
-        Next Card
-      </button>
+      <label style={{ marginRight: "10px" }}>Check your answer:</label>
+      <input
+        type="text"
+        value={userAnswer}
+        onChange={(e) => setUserAnswer(e.target.value)}
+        placeholder="Type your answer here"
+      />
+      <button onClick={checkAnswer}>Check Answer</button>
+      {feedback && (
+        <div style={{ color: feedback === "Correct!" ? "	#0FFF50" : "red" }}>
+          {feedback}
+        </div>
+      )}
+      <button onClick={handlePreviousCard}>Previous Card</button>
+      <button onClick={handleNextCard}>Next Card</button>
+      <button onClick={shuffleCards}>Shuffle Cards</button>
     </div>
   );
 };
